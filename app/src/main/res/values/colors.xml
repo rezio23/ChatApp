@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary brand color - WhatsApp-style green -->
+    <color name="primary">#075E54</color>
+    <color name="primary_dark">#054D45</color>
+    <color name="primary_light">#128C7E</color>
+    <color name="accent">#25D366</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#757575</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Chat specific -->
+    <color name="chat_background">#ECE5DD</color>
+    <color name="message_sent">#DCF8C6</color>
+    <color name="message_sent_dark">#075E54</color>
+    <color name="message_received">#FFFFFF</color>
+    <color name="background">#F5F5F5</color>
+
+    <!-- Divider -->
+    <color name="divider">#E0E0E0</color>
+</resources>
