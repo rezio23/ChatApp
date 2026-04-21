@@ -2,19 +2,19 @@ package com.chatapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chatapp.auth.LoginActivity
 import com.chatapp.chat.ChatActivity
 import com.chatapp.databinding.ActivityMainBinding
 import com.chatapp.model.ChatPreview
-import com.chatapp.model.Message
 import com.chatapp.model.User
 import com.chatapp.users.UsersActivity
 import com.chatapp.utils.FirebaseUtils
-import com.chatapp.utils.TimeUtils
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
@@ -52,26 +52,33 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadChats() {
         val currentUid = FirebaseUtils.currentUserId
+        if (currentUid.isEmpty()) return
+
+        Log.d("MainActivity", "Loading chats for UID: $currentUid")
 
         chatsListener = FirebaseUtils.chatsCollection()
             .document(currentUid)
             .collection("userChats")
             .orderBy("lastMessageTime", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
+                if (error != null) {
+                    Log.e("MainActivity", "Error loading chats: ${error.message}", error)
+                    return@addSnapshotListener
+                }
 
-                chatPreviews.clear()
-
-                val docs = snapshot.documents
-                if (docs.isEmpty()) {
-                    binding.tvEmptyState.visibility = android.view.View.VISIBLE
+                if (snapshot == null || snapshot.isEmpty) {
+                    Log.d("MainActivity", "No chats found in Firestore")
+                    binding.tvEmptyState.visibility = View.VISIBLE
+                    chatPreviews.clear()
                     adapter.notifyDataSetChanged()
                     return@addSnapshotListener
                 }
 
-                binding.tvEmptyState.visibility = android.view.View.GONE
-
+                binding.tvEmptyState.visibility = View.GONE
+                val tempPreviews = mutableListOf<ChatPreview>()
                 var loadedCount = 0
+                val docs = snapshot.documents
+
                 for (doc in docs) {
                     val otherUserId = doc.getString("userId") ?: continue
                     val lastMessage = doc.getString("lastMessage") ?: ""
@@ -81,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                         .addOnSuccessListener { userDoc ->
                             val user = userDoc.toObject(User::class.java)
                             if (user != null) {
-                                chatPreviews.add(
+                                tempPreviews.add(
                                     ChatPreview(
                                         user = user,
                                         lastMessage = lastMessage,
@@ -91,7 +98,15 @@ class MainActivity : AppCompatActivity() {
                             }
                             loadedCount++
                             if (loadedCount == docs.size) {
-                                chatPreviews.sortByDescending { it.lastMessageTime }
+                                chatPreviews.clear()
+                                chatPreviews.addAll(tempPreviews.sortedByDescending { it.lastMessageTime })
+                                adapter.notifyDataSetChanged()
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("MainActivity", "Error fetching user details for $otherUserId", e)
+                            loadedCount++
+                            if (loadedCount == docs.size) {
                                 adapter.notifyDataSetChanged()
                             }
                         }

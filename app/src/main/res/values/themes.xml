@@ -6,5 +6,12 @@
         <item name="colorAccent">@color/accent</item>
         <item name="android:windowBackground">@color/white</item>
         <item name="android:statusBarColor">@color/primary_dark</item>
+
+        <!-- Fix for overflow menu text color -->
+        <item name="actionOverflowMenuStyle">@style/OverflowMenu</item>
+    </style>
+
+    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@color/white</item>
     </style>
 </resources>
